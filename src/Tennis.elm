@@ -45,6 +45,19 @@ scoreWhenAdvantage advantagedPlayer winner =
         Deuce
 
 
+scoreWhenForty : FortyData -> Player -> Score
+scoreWhenForty current winner =
+    if current.player == winner then
+        Game winner
+    else
+        case (incrementPoint current.otherPlayerPoint) of
+            Just point ->
+                Forty { current | otherPlayerPoint = point }
+
+            Nothing ->
+                Deuce
+
+
 other : Player -> Player
 other player =
     case player of
@@ -53,3 +66,16 @@ other player =
 
         PlayerTwo ->
             PlayerOne
+
+
+incrementPoint : Point -> Maybe Point
+incrementPoint point =
+    case point of
+        Love ->
+            Just Fifteen
+
+        Fifteen ->
+            Just Thirty
+
+        Thirty ->
+            Nothing
