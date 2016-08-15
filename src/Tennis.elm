@@ -35,3 +35,21 @@ type Score
 scoreWhenDeuce : Player -> Score
 scoreWhenDeuce winner =
     Advantage winner
+
+
+scoreWhenAdvantage : Player -> Player -> Score
+scoreWhenAdvantage advantagedPlayer winner =
+    if advantagedPlayer == winner then
+        Game winner
+    else
+        Deuce
+
+
+other : Player -> Player
+other player =
+    case player of
+        PlayerOne ->
+            PlayerTwo
+
+        PlayerTwo ->
+            PlayerOne

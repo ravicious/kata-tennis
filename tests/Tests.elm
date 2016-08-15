@@ -14,4 +14,12 @@ all =
                 winner
                     |> Tennis.scoreWhenDeuce
                     |> Expect.equal (Tennis.Advantage winner)
+        , fuzz CustomFuzzers.player "Given advantage when advantaged player wins then score is correct" <|
+            \advantagedPlayer ->
+                Tennis.scoreWhenAdvantage advantagedPlayer advantagedPlayer
+                    |> Expect.equal (Tennis.Game advantagedPlayer)
+        , fuzz CustomFuzzers.player "Given advantage when other player wins the score is correct" <|
+            \advantagedPlayer ->
+                Tennis.scoreWhenAdvantage advantagedPlayer (Tennis.other advantagedPlayer)
+                    |> Expect.equal Tennis.Deuce
         ]
