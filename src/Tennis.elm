@@ -30,3 +30,8 @@ type Score
     | Deuce
     | Advantage Player
     | Game Player
+
+
+scoreWhenDeuce : Player -> Score
+scoreWhenDeuce winner =
+    Advantage winner
