@@ -32,6 +32,53 @@ type Score
     | Game Player
 
 
+other : Player -> Player
+other player =
+    case player of
+        PlayerOne ->
+            PlayerTwo
+
+        PlayerTwo ->
+            PlayerOne
+
+
+incrementPoint : Point -> Maybe Point
+incrementPoint point =
+    case point of
+        Love ->
+            Just Fifteen
+
+        Fifteen ->
+            Just Thirty
+
+        Thirty ->
+            Nothing
+
+
+pointTo : Player -> Point -> PointsData -> PointsData
+pointTo player point pointsData =
+    case player of
+        PlayerOne ->
+            { pointsData | playerOnePoint = point }
+
+        PlayerTwo ->
+            { pointsData | playerTwoPoint = point }
+
+
+pointFor : Player -> PointsData -> Point
+pointFor player pointsData =
+    case player of
+        PlayerOne ->
+            pointsData.playerOnePoint
+
+        PlayerTwo ->
+            pointsData.playerTwoPoint
+
+
+
+-- Transitions
+
+
 scoreWhenDeuce : Player -> Score
 scoreWhenDeuce winner =
     Advantage winner
@@ -73,46 +120,3 @@ scoreWhenPoints current winner =
                     { player = winner
                     , otherPlayerPoint = pointFor (other winner) current
                     }
-
-
-other : Player -> Player
-other player =
-    case player of
-        PlayerOne ->
-            PlayerTwo
-
-        PlayerTwo ->
-            PlayerOne
-
-
-pointFor : Player -> PointsData -> Point
-pointFor player pointsData =
-    case player of
-        PlayerOne ->
-            pointsData.playerOnePoint
-
-        PlayerTwo ->
-            pointsData.playerTwoPoint
-
-
-incrementPoint : Point -> Maybe Point
-incrementPoint point =
-    case point of
-        Love ->
-            Just Fifteen
-
-        Fifteen ->
-            Just Thirty
-
-        Thirty ->
-            Nothing
-
-
-pointTo : Player -> Point -> PointsData -> PointsData
-pointTo player point pointsData =
-    case player of
-        PlayerOne ->
-            { pointsData | playerOnePoint = point }
-
-        PlayerTwo ->
-            { pointsData | playerTwoPoint = point }
