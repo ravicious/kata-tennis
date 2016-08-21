@@ -1,4 +1,4 @@
-module CustomFuzzers exposing (player, fortyData, loveOrFifteen)
+module CustomFuzzers exposing (player, fortyData, loveOrFifteen, pointsData)
 
 import Fuzz
 import Tennis exposing (..)
@@ -55,6 +55,13 @@ fortyDataShrinker { player, otherPlayerPoint } =
         `Shrink.andMap` pointShrinker otherPlayerPoint
 
 
+pointsDataShrinker : Shrink.Shrinker PointsData
+pointsDataShrinker { playerOnePoint, playerTwoPoint } =
+    PointsData
+        `Shrink.map` pointShrinker playerOnePoint
+        `Shrink.andMap` pointShrinker playerTwoPoint
+
+
 
 -- Fuzzers
 
@@ -83,3 +90,12 @@ loveOrFifteen =
             pointShrinker
     in
         Fuzz.custom generator shrinker
+
+
+pointsData : Fuzz.Fuzzer PointsData
+pointsData =
+    let
+        generator =
+            Random.map2 PointsData pointGenerator pointGenerator
+    in
+        Fuzz.custom generator pointsDataShrinker

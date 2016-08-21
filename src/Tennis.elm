@@ -58,6 +58,23 @@ scoreWhenForty current winner =
                 Deuce
 
 
+scoreWhenPoints : PointsData -> Player -> Score
+scoreWhenPoints current winner =
+    let
+        nextWinnerPoint =
+            incrementPoint (pointFor winner current)
+    in
+        case nextWinnerPoint of
+            Just point ->
+                Points <| pointTo winner point current
+
+            Nothing ->
+                Forty
+                    { player = winner
+                    , otherPlayerPoint = pointFor (other winner) current
+                    }
+
+
 other : Player -> Player
 other player =
     case player of
@@ -66,6 +83,16 @@ other player =
 
         PlayerTwo ->
             PlayerOne
+
+
+pointFor : Player -> PointsData -> Point
+pointFor player pointsData =
+    case player of
+        PlayerOne ->
+            pointsData.playerOnePoint
+
+        PlayerTwo ->
+            pointsData.playerTwoPoint
 
 
 incrementPoint : Point -> Maybe Point
@@ -79,3 +106,13 @@ incrementPoint point =
 
         Thirty ->
             Nothing
+
+
+pointTo : Player -> Point -> PointsData -> PointsData
+pointTo player point pointsData =
+    case player of
+        PlayerOne ->
+            { pointsData | playerOnePoint = point }
+
+        PlayerTwo ->
+            { pointsData | playerTwoPoint = point }

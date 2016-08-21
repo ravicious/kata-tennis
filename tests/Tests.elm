@@ -49,4 +49,45 @@ all =
                             |> Maybe.map Forty
                 in
                     Expect.equal expected (Just actual)
+        , fuzz2
+            CustomFuzzers.pointsData
+            CustomFuzzers.player
+            "Given player: 30 when player wins then score is correct"
+          <|
+            \current winner ->
+                let
+                    current =
+                        pointTo winner Thirty current
+
+                    actual =
+                        scoreWhenPoints current winner
+
+                    expected =
+                        Forty { player = winner, otherPlayerPoint = pointFor (other winner) current }
+                in
+                    Expect.equal expected actual
+        , fuzz3
+            CustomFuzzers.pointsData
+            CustomFuzzers.player
+            CustomFuzzers.loveOrFifteen
+            "Given player: < 30 when player wins then score is correct"
+          <|
+            \current winner loveOrFifteen ->
+                let
+                    current =
+                        pointTo winner loveOrFifteen current
+
+                    actual =
+                        scoreWhenPoints current winner
+
+                    expectedPlayerPoint =
+                        current
+                            |> pointFor winner
+                            |> incrementPoint
+
+                    expected =
+                        expectedPlayerPoint
+                            |> Maybe.map (\point -> Points <| pointTo winner point current)
+                in
+                    Expect.equal expected (Just actual)
         ]
