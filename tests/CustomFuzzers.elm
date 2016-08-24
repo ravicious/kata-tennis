@@ -1,4 +1,4 @@
-module CustomFuzzers exposing (player, fortyData, loveOrFifteen, pointsData)
+module CustomFuzzers exposing (player, fortyData, loveOrFifteen, pointsData, score)
 
 import Fuzz
 import Tennis exposing (..)
@@ -19,6 +19,52 @@ pointGenerator : Random.Generator Point
 pointGenerator =
     Random.sample [ Love, Fifteen, Thirty ]
         |> Random.map (Maybe.withDefault Love)
+
+
+fortyDataGenerator : Random.Generator FortyData
+fortyDataGenerator =
+    Random.map2 FortyData playerGenerator pointGenerator
+
+
+pointsDataGenerator : Random.Generator PointsData
+pointsDataGenerator =
+    Random.map2 PointsData pointGenerator pointGenerator
+
+
+fortyGenerator : Random.Generator Score
+fortyGenerator =
+    Random.map Forty fortyDataGenerator
+
+
+pointsGenerator : Random.Generator Score
+pointsGenerator =
+    Random.map Points pointsDataGenerator
+
+
+deuceGenerator : Random.Generator Score
+deuceGenerator =
+    Random.constant Deuce
+
+
+advantageGenerator : Random.Generator Score
+advantageGenerator =
+    Random.map Advantage playerGenerator
+
+
+gameGenerator : Random.Generator Score
+gameGenerator =
+    Random.map Game playerGenerator
+
+
+scoreGenerator : Random.Generator Score
+scoreGenerator =
+    Random.choices
+        [ pointsGenerator
+        , fortyGenerator
+        , deuceGenerator
+        , advantageGenerator
+        , gameGenerator
+        ]
 
 
 
@@ -62,6 +108,31 @@ pointsDataShrinker { playerOnePoint, playerTwoPoint } =
         `Shrink.andMap` pointShrinker playerTwoPoint
 
 
+{-| Shrinks a Score value, but only within a particular constructor.
+This means that, for example, a Deuce won't be shrinked to Forty
+and Forty won't be shrinked to Points.
+
+This way of shrinking is enough for our use case.
+-}
+scoreShrinker : Shrink.Shrinker Score
+scoreShrinker score =
+    case score of
+        Points pointsData ->
+            pointsDataShrinker pointsData |> Shrink.map Points
+
+        Forty fortyData ->
+            fortyDataShrinker fortyData |> Shrink.map Forty
+
+        Deuce ->
+            Shrink.noShrink Deuce
+
+        Advantage advantagedPlayer ->
+            playerShrinker advantagedPlayer |> Shrink.map Advantage
+
+        Game winner ->
+            playerShrinker winner |> Shrink.map Game
+
+
 
 -- Fuzzers
 
@@ -73,11 +144,7 @@ player =
 
 fortyData : Fuzz.Fuzzer FortyData
 fortyData =
-    let
-        generator =
-            Random.map2 FortyData playerGenerator pointGenerator
-    in
-        Fuzz.custom generator fortyDataShrinker
+    Fuzz.custom fortyDataGenerator fortyDataShrinker
 
 
 loveOrFifteen : Fuzz.Fuzzer Point
@@ -94,8 +161,9 @@ loveOrFifteen =
 
 pointsData : Fuzz.Fuzzer PointsData
 pointsData =
-    let
-        generator =
-            Random.map2 PointsData pointGenerator pointGenerator
-    in
-        Fuzz.custom generator pointsDataShrinker
+    Fuzz.custom pointsDataGenerator pointsDataShrinker
+
+
+score : Fuzz.Fuzzer Score
+score =
+    Fuzz.custom scoreGenerator scoreShrinker

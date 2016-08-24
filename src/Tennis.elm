@@ -125,3 +125,22 @@ scoreWhenPoints current winner =
 scoreWhenGame : Player -> Score
 scoreWhenGame winner =
     Game winner
+
+
+score : Score -> Player -> Score
+score current winner =
+    case current of
+        Points pointsData ->
+            scoreWhenPoints pointsData winner
+
+        Forty fortyData ->
+            scoreWhenForty fortyData winner
+
+        Deuce ->
+            scoreWhenDeuce winner
+
+        Advantage advantagedPlayer ->
+            scoreWhenAdvantage advantagedPlayer winner
+
+        Game gameWinner ->
+            scoreWhenGame gameWinner

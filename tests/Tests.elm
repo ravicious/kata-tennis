@@ -1,4 +1,4 @@
-module Tests exposing (..)
+module Tests exposing (all)
 
 import Test exposing (..)
 import Expect
@@ -6,9 +6,9 @@ import CustomFuzzers
 import Tennis exposing (..)
 
 
-all : Test
-all =
-    describe "A Test Suite for the Tennis module"
+transitionTests : Test
+transitionTests =
+    describe "Tests for specific transitions"
         [ fuzz CustomFuzzers.player "Given deuce when player wins then score is correct" <|
             \winner ->
                 winner
@@ -101,3 +101,23 @@ all =
                 in
                     Expect.equal expected actual
         ]
+
+
+scoreTests : Test
+scoreTests =
+    describe "Tests for the score function"
+        [ -- The following test is mostly a smoke test which checks
+          -- if the function crashes for certain inputs.
+          fuzz2 CustomFuzzers.score CustomFuzzers.player "score doesn't crash" <|
+            \current winner ->
+                let
+                    actual =
+                        score current winner
+                in
+                    Expect.true "The score function didn't crash" True
+        ]
+
+
+all : Test
+all =
+    concat [ transitionTests, scoreTests ]
