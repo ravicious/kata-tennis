@@ -90,4 +90,14 @@ all =
                             |> Maybe.map (\point -> Points <| pointTo winner point current)
                 in
                     Expect.equal expected (Just actual)
+        , fuzz CustomFuzzers.player "Given game is over it stays over" <|
+            \winner ->
+                let
+                    actual =
+                        scoreWhenGame winner
+
+                    expected =
+                        Game winner
+                in
+                    Expect.equal expected actual
         ]

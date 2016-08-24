@@ -120,3 +120,8 @@ scoreWhenPoints current winner =
                     { player = winner
                     , otherPlayerPoint = pointFor (other winner) current
                     }
+
+
+scoreWhenGame : Player -> Score
+scoreWhenGame winner =
+    Game winner
