@@ -24,11 +24,11 @@ transitionTests =
                     |> Expect.equal Deuce
         , fuzz CustomFuzzers.fortyData "Given player: 40 when player wins then score is correct" <|
             \current ->
-                scoreWhenForty current current.player
+                scoreWhenForty current.player current
                     |> Expect.equal (Game current.player)
         , fuzz CustomFuzzers.fortyData "Given player: 40 - other: 30 when other wins then score is correct" <|
             \current ->
-                scoreWhenForty { current | otherPlayerPoint = Thirty } (other current.player)
+                scoreWhenForty (other current.player) { current | otherPlayerPoint = Thirty }
                     |> Expect.equal Deuce
         , fuzz2
             CustomFuzzers.fortyData
@@ -41,7 +41,7 @@ transitionTests =
                         { current | otherPlayerPoint = otherPlayerPoint }
 
                     actual =
-                        scoreWhenForty current (other current.player)
+                        scoreWhenForty (other current.player) current
 
                     expected =
                         incrementPoint current.otherPlayerPoint
@@ -60,7 +60,7 @@ transitionTests =
                         pointTo winner Thirty current
 
                     actual =
-                        scoreWhenPoints current winner
+                        scoreWhenPoints winner current
 
                     expected =
                         Forty { player = winner, otherPlayerPoint = pointFor (other winner) current }
@@ -78,7 +78,7 @@ transitionTests =
                         pointTo winner loveOrFifteen current
 
                     actual =
-                        scoreWhenPoints current winner
+                        scoreWhenPoints winner current
 
                     expectedPlayerPoint =
                         current
@@ -108,11 +108,11 @@ scoreTests =
     describe "Tests for the score function"
         [ -- The following test is mostly a smoke test which checks
           -- if the function crashes for certain inputs.
-          fuzz2 CustomFuzzers.score CustomFuzzers.player "score doesn't crash" <|
-            \current winner ->
+          fuzz2 CustomFuzzers.player CustomFuzzers.score "score doesn't crash" <|
+            \winner current ->
                 let
                     actual =
-                        score current winner
+                        score winner current
                 in
                     Expect.true "The score function didn't crash" True
         ]

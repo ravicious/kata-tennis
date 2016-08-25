@@ -92,8 +92,8 @@ scoreWhenAdvantage advantagedPlayer winner =
         Deuce
 
 
-scoreWhenForty : FortyData -> Player -> Score
-scoreWhenForty current winner =
+scoreWhenForty : Player -> FortyData -> Score
+scoreWhenForty winner current =
     if current.player == winner then
         Game winner
     else
@@ -105,8 +105,8 @@ scoreWhenForty current winner =
                 Deuce
 
 
-scoreWhenPoints : PointsData -> Player -> Score
-scoreWhenPoints current winner =
+scoreWhenPoints : Player -> PointsData -> Score
+scoreWhenPoints winner current =
     let
         nextWinnerPoint =
             incrementPoint (pointFor winner current)
@@ -127,14 +127,14 @@ scoreWhenGame winner =
     Game winner
 
 
-score : Score -> Player -> Score
-score current winner =
+score : Player -> Score -> Score
+score winner current =
     case current of
         Points pointsData ->
-            scoreWhenPoints pointsData winner
+            scoreWhenPoints winner pointsData
 
         Forty fortyData ->
-            scoreWhenForty fortyData winner
+            scoreWhenForty winner fortyData
 
         Deuce ->
             scoreWhenDeuce winner
