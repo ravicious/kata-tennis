@@ -1,4 +1,14 @@
-module CustomFuzzers exposing (player, fortyData, loveOrFifteen, pointsData, score)
+module CustomFuzzers
+    exposing
+        ( player
+        , fortyData
+        , loveOrFifteen
+        , pointsData
+        , score
+        , wins
+        , moreThanNWins
+        , alternateWins
+        )
 
 import Fuzz
 import Tennis exposing (..)
@@ -67,6 +77,68 @@ scoreGenerator =
         ]
 
 
+winsGenerator : Int -> Int -> Random.Generator Wins
+winsGenerator min max =
+    Random.andThen
+        (Random.int min max)
+        (\n -> Random.list n playerGenerator)
+
+
+{-| Franc Klaassen and Jan Magnus in "On the Independence and Identical Distribution of Points in
+Tennis" (1998) state that at Wimbledon from 1992 to 1995 the average number of points in game
+was 6.12 for men's singles and 6.46 for ladies' singles. The average number of points in tiebreak
+was 12.13 and 11.84 respectively (Table 1 in the paper).
+
+Link to the paper:
+http://econpapers.repec.org/paper/tiutiucen/395a6222-6318-49b5-a42c-643d0ee833a0.htm
+-}
+averageNumberOfPointsInGame : Int
+averageNumberOfPointsInGame =
+    6
+
+
+{-| Multiplying the average by three seems to result in a reasonably high upper bound for the number
+of points in a game to generate.
+-}
+upperBoundForNumberOfWins : Int
+upperBoundForNumberOfWins =
+    averageNumberOfPointsInGame * 3
+
+
+randomWinsGenerator : Random.Generator Wins
+randomWinsGenerator =
+    winsGenerator 0 upperBoundForNumberOfWins
+
+
+moreThanNWinsGenerator : Int -> Random.Generator Wins
+moreThanNWinsGenerator n =
+    let
+        lowerBound =
+            n + 1
+
+        upperBound =
+            -- If the lower bound is equal or greater than the upper bound, it doesn't make sense
+            -- to generate a range with such bounds. Thus we increase the upper bound.
+            if lowerBound >= upperBoundForNumberOfWins then
+                upperBoundForNumberOfWins + n
+            else
+                upperBoundForNumberOfWins
+    in
+        winsGenerator lowerBound upperBound
+
+
+alternateWinsGenerator : Random.Generator Wins
+alternateWinsGenerator =
+    Random.andThen
+        (Random.int 0 (upperBoundForNumberOfWins // 2))
+        (\n ->
+            playerGenerator
+                |> Random.map (\player -> [ player, (other player) ])
+                |> (flip Random.andThen) (\players -> Random.list n (Random.constant players))
+                |> Random.map List.concat
+        )
+
+
 
 -- Shrinkers
 
@@ -133,6 +205,47 @@ scoreShrinker score =
             playerShrinker winner |> Shrink.map Game
 
 
+winsShrinker : Shrink.Shrinker Wins
+winsShrinker =
+    Shrink.list playerShrinker
+
+
+{-| Given a list of players, shrinks it until the length of the list is equal to lowerBound plus 1.
+Usually used together with moreThanNWinsGenerator.
+
+Had moreThanNWins used winsShrinker instead, moreThanNWinsGenerator would be generating lists longer
+than the lowerBound, but then winsShrinker would be shrinking the lists to a size smaller
+than lowerBound.
+-}
+moreThanNWinsShrinker : Int -> Shrink.Shrinker Wins
+moreThanNWinsShrinker lowerBound =
+    Shrink.keepIf (\wins -> (List.length wins) > lowerBound) winsShrinker
+
+
+{-| A list with less than two elements doesn't have alternate elements.
+-}
+minAlternateWinsListLength : Int
+minAlternateWinsListLength =
+    2
+
+
+{-| If the list has more than two elements, returns a lazy list with the tail of the list.
+Otherwise returns an empty lazy list – a list of alternate wins can't have less than two elements.
+
+Since this shrinker is called only on lists with alternate elements, that property of them
+(having alternate elements) is kept after removing the first element.
+-}
+alternateWinsShrinker : Shrink.Shrinker Wins
+alternateWinsShrinker list =
+    if List.length list > minAlternateWinsListLength then
+        list
+            |> List.tail
+            |> Maybe.withDefault []
+            |> Lazy.List.singleton
+    else
+        empty
+
+
 
 -- Fuzzers
 
@@ -140,6 +253,21 @@ scoreShrinker score =
 player : Fuzz.Fuzzer Player
 player =
     Fuzz.custom playerGenerator playerShrinker
+
+
+wins : Fuzz.Fuzzer Wins
+wins =
+    Fuzz.custom randomWinsGenerator winsShrinker
+
+
+moreThanNWins : Int -> Fuzz.Fuzzer Wins
+moreThanNWins n =
+    Fuzz.custom (moreThanNWinsGenerator n) (moreThanNWinsShrinker n)
+
+
+alternateWins : Fuzz.Fuzzer Wins
+alternateWins =
+    Fuzz.custom alternateWinsGenerator alternateWinsShrinker
 
 
 fortyData : Fuzz.Fuzzer FortyData

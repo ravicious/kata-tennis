@@ -32,6 +32,18 @@ type Score
     | Game Player
 
 
+type alias Wins =
+    List Player
+
+
+newGame : Score
+newGame =
+    Points
+        { playerOnePoint = Love
+        , playerTwoPoint = Love
+        }
+
+
 other : Player -> Player
 other player =
     case player of
@@ -144,3 +156,8 @@ score winner current =
 
         Game gameWinner ->
             scoreWhenGame gameWinner
+
+
+scoreList : Wins -> Score
+scoreList wins =
+    List.foldl score newGame wins

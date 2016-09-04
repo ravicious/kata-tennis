@@ -6,6 +6,63 @@ import CustomFuzzers
 import Tennis exposing (..)
 
 
+-- Helper functions
+
+
+isPoints : Score -> Bool
+isPoints score =
+    case score of
+        Points _ ->
+            True
+
+        _ ->
+            False
+
+
+isForty : Score -> Bool
+isForty score =
+    case score of
+        Forty _ ->
+            True
+
+        _ ->
+            False
+
+
+isDeuce : Score -> Bool
+isDeuce score =
+    case score of
+        Deuce ->
+            True
+
+        _ ->
+            False
+
+
+isAdvantage : Score -> Bool
+isAdvantage score =
+    case score of
+        Advantage _ ->
+            True
+
+        _ ->
+            False
+
+
+isGame : Score -> Bool
+isGame score =
+    case score of
+        Game _ ->
+            True
+
+        _ ->
+            False
+
+
+
+-- Tests
+
+
 transitionTests : Test
 transitionTests =
     describe "Tests for specific transitions"
@@ -114,7 +171,77 @@ scoreTests =
                     actual =
                         score winner current
                 in
-                    Expect.true "The score function didn't crash" True
+                    Expect.true "Expected the score function not to crash" True
+        , fuzz CustomFuzzers.wins "A game with less than four balls isn't over" <|
+            \wins ->
+                let
+                    actual =
+                        List.take 3 wins |> scoreList
+                in
+                    Expect.true "Expected the value not to be of Game constructor" <|
+                        (actual |> (not << isGame))
+        , fuzz CustomFuzzers.wins "A game with less than six balls can't be Deuce" <|
+            \wins ->
+                let
+                    actual =
+                        List.take 5 wins |> scoreList
+                in
+                    Expect.true "Expected the value not to be of Deuce constructor" <|
+                        (actual |> (not << isDeuce))
+        , fuzz
+            CustomFuzzers.wins
+            "A game with less than seven balls can't have any player with advantage"
+          <|
+            \wins ->
+                let
+                    actual =
+                        List.take 6 wins |> scoreList
+                in
+                    Expect.true "Expected the value not to be of Advantage constructor" <|
+                        (actual |> (not << isAdvantage))
+        , fuzz
+            (CustomFuzzers.moreThanNWins 4)
+            "A game with more than four balls can't be Points"
+          <|
+            \wins ->
+                let
+                    actual =
+                        scoreList wins
+                in
+                    Expect.true "Expected the value not to be of Points constructor" <|
+                        (actual |> (not << isPoints))
+        , fuzz
+            (CustomFuzzers.moreThanNWins 5)
+            "A game with more than five balls can't be Forty"
+          <|
+            \wins ->
+                let
+                    actual =
+                        scoreList wins
+                in
+                    Expect.true "Expected the value not to be of Forty constructor" <|
+                        (actual |> (not << isForty))
+        , fuzz
+            CustomFuzzers.player
+            "A game where one player wins all balls is over in four balls"
+          <|
+            \winner ->
+                let
+                    fourWins =
+                        List.repeat 4 winner
+
+                    actual =
+                        scoreList fourWins
+                in
+                    Expect.equal (Game winner) actual
+        , fuzz CustomFuzzers.alternateWins "A game where players alternate never ends" <|
+            \alternateWins ->
+                let
+                    actual =
+                        scoreList alternateWins
+                in
+                    Expect.true "Expected the value not to be of Game constructor" <|
+                        (actual |> (not << isGame))
         ]
 
 
