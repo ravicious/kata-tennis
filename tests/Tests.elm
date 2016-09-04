@@ -245,6 +245,21 @@ scoreTests =
         ]
 
 
+otherTests : Test
+otherTests =
+    describe "Tests for the other function"
+        [ fuzz CustomFuzzers.player "other returns a different player" <|
+            \player ->
+                Expect.notEqual player (other player)
+        , fuzz CustomFuzzers.player "Calling other twice returns the same player" <|
+            \player ->
+                player
+                    |> other
+                    >> other
+                    |> Expect.equal player
+        ]
+
+
 all : Test
 all =
-    concat [ transitionTests, scoreTests ]
+    concat [ transitionTests, scoreTests, otherTests ]
