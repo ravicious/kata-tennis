@@ -161,3 +161,55 @@ score winner current =
 scoreList : Wins -> Score
 scoreList wins =
     List.foldl score newGame wins
+
+
+
+-- Formatting
+
+
+pointToString : Point -> String
+pointToString point =
+    case point of
+        Love ->
+            "love"
+
+        Fifteen ->
+            "15"
+
+        Thirty ->
+            "30"
+
+
+scoreToString : String -> String -> Score -> String
+scoreToString playerOneName playerTwoName score =
+    case score of
+        Points points ->
+            if points.playerOnePoint == points.playerTwoPoint then
+                (pointToString points.playerOnePoint) ++ "-all"
+            else
+                (pointToString points.playerOnePoint) ++ "-" ++ (pointToString points.playerTwoPoint)
+
+        Forty forty ->
+            let
+                other =
+                    pointToString forty.otherPlayerPoint
+            in
+                if forty.player == PlayerOne then
+                    "40-" ++ other
+                else
+                    other ++ "-40"
+
+        Deuce ->
+            "deuce"
+
+        Advantage advantagedPlayer ->
+            if advantagedPlayer == PlayerOne then
+                "advantage " ++ playerOneName
+            else
+                "advantage " ++ playerTwoName
+
+        Game winner ->
+            if winner == PlayerOne then
+                "game " ++ playerOneName
+            else
+                "game " ++ playerTwoName
